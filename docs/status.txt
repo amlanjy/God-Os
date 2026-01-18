@@ -1,0 +1,15 @@
+Project Status
+==============
+
+Current state: Specification and design.
+
+Active work includes:
+- Formalizing intent grammar
+- Defining canonical IR
+- Documenting semantic divergence handling
+
+No implementation is published yet by design.
+Early commits prioritize correctness of abstraction
+over premature code.
+
+This repository will evolve incrementally.
