@@ -1,0 +1,32 @@
+IOMOS Roadmap (Non-Timeline)
+===========================
+
+This document describes order of work, not dates.
+
+Phase 0: Specification
+- Intent language definition
+- Canonical IR
+- Semantic divergence rules
+- Kernel/persona boundary definition
+
+Phase 1: User-Space Prototype
+- Intent parser
+- POSIX semantic persona
+- Filesystem intent resolution
+- Structured execution reporting
+
+Phase 2: Kernel Interface Exploration
+- Minimal kernel primitive set
+- Structured intent IPC design
+- Capability enforcement model
+
+Phase 3: Additional Personas
+- Windows NT semantic persona (clean-room)
+- Darwin/BSD semantic persona (clean-room)
+
+Phase 4: Evaluation
+- Correctness under semantic divergence
+- Performance overhead analysis
+- Failure-mode documentation
+
+No guarantees are made regarding completeness or timelines.
