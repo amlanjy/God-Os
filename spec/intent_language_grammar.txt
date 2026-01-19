@@ -1,0 +1,143 @@
+Appendix A — Formal Grammar (BNF)
+================================
+
+This appendix defines the formal grammar for the Intent Language.
+The grammar specifies syntactic structure only; semantic validation
+is defined elsewhere.
+
+
+A.1 Lexical Elements
+--------------------
+
+<identifier> ::= <alpha> | <alpha> <identifier_char>*
+
+<identifier_char> ::= <alpha> | <digit> | "_"
+
+<alpha> ::= "a" | ... | "z" | "A" | ... | "Z"
+
+<digit> ::= "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9"
+
+<boolean> ::= "true" | "false"
+
+<number> ::= <digit> | <digit> <number>
+
+
+A.2 Intent Structure
+--------------------
+
+<intent> ::= <operation> <target> <modifier_list>
+
+<operation> ::= "delete"
+              | "create"
+              | "open"
+              | "read"
+              | "write"
+              | "execute"
+              | "move"
+              | "copy"
+              | "list"
+              | "stat"
+
+
+A.3 Target Grammar
+------------------
+
+<target> ::= <path_target>
+           | <object_target>
+
+<path_target> ::= <neutral_path>
+
+<object_target> ::= <object_type> ":" <identifier>
+
+<object_type> ::= "process"
+                | "handle"
+                | "object"
+
+
+A.4 Neutral Path Grammar
+------------------------
+
+<neutral_path> ::= "/\" <path_component> ("/\" <path_component>)*
+
+<path_component> ::= <identifier>
+
+
+A.5 Modifiers
+-------------
+
+<modifier_list> ::= <modifier> <modifier_list>
+                  | ε
+
+<modifier> ::= <attribute>
+             | <constraint>
+
+
+A.6 Attributes
+--------------
+
+<attribute> ::= "recursive"
+              | "force"
+              | "exclusive"
+              | "shared"
+              | "append"
+
+
+A.7 Constraints
+---------------
+
+<constraint> ::= <constraint_key> ":" <constraint_value>
+
+<constraint_key> ::= <identifier>
+
+<constraint_value> ::= <identifier>
+                     | <number>
+                     | <boolean>
+
+
+A.8 Context (Implicit)
+----------------------
+
+Context is not part of user-facing syntax.
+
+Context fields are supplied by the execution environment and include:
+- persona identifier
+- workspace identifier
+- current working directory
+- capability set
+
+Context MUST be attached before intent expansion.
+
+
+A.9 Examples
+------------
+
+Minimal intent:
+delete dfy
+
+Expanded neutral form:
+delete /\mnt/\abc/\d/\dfy recursive force
+
+Parsed structure:
+
+<intent>
+ ├─ <operation> delete
+ ├─ <target>
+ │   └─ <neutral_path> /\mnt/\abc/\d/\dfy
+ └─ <modifier_list>
+     ├─ recursive
+     └─ force
+
+
+A.10 Grammar Guarantees
+----------------------
+
+This grammar guarantees:
+- deterministic parsing
+- unambiguous intent structure
+- separation of syntax and semantics
+- extensibility via new operations or modifiers
+
+The grammar does NOT guarantee:
+- semantic validity
+- permission correctness
+- persona compatibility
