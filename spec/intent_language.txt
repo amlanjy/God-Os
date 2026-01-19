@@ -1,4 +1,246 @@
-Intent Language Specification (Draft)
-====================================
+Intent Language Specification (ILS)
+==================================
 
 Status: Draft
+Version: 0.1
+Scope: Semantic intent expression for OS-level operations
+
+
+1. PURPOSE
+----------
+
+The Intent Language Specification (ILS) defines a canonical, operating-system-
+neutral representation of system-level intent.
+
+The intent language expresses *what* an operation means, independent of:
+- operating system
+- syscall interface
+- command syntax
+- ABI
+- hardware architecture
+
+ILS is not a programming language.
+ILS is not a shell.
+ILS is a semantic contract.
+
+
+2. DESIGN PRINCIPLES
+--------------------
+
+- Deterministic: identical intent produces identical semantic expansion
+- Explicit: no hidden defaults
+- OS-neutral: no POSIX, NT, or BSD assumptions
+- Extensible: new operations do not break old ones
+- Auditable: intent must be inspectable and explainable
+- Honest: semantic divergence must be exposed, not hidden
+
+
+3. CORE CONCEPTS
+----------------
+
+An INTENT is composed of:
+
+- operation   : the semantic action being requested
+- target      : the object(s) the operation applies to
+- attributes  : semantic modifiers
+- constraints : execution limits or requirements
+- context     : execution environment metadata
+
+Formal model:
+
+INTENT := (operation, target, attributes, constraints, context)
+
+
+4. OPERATIONS
+-------------
+
+Operations represent semantic actions, not syscalls.
+
+Defined core operations (initial set):
+
+- delete
+- create
+- open
+- read
+- write
+- execute
+- move
+- copy
+- list
+- stat
+
+Operations are verbs and MUST NOT encode policy.
+
+
+5. TARGET MODEL
+---------------
+
+Targets identify objects of intent.
+
+Target types include:
+
+- path        : filesystem object
+- process     : process identifier
+- handle      : OS-level handle abstraction
+- object_ref  : persona-specific reference
+
+Filesystem paths use a neutral, component-based model.
+
+Internal representation:
+
+PATH := [component_0, component_1, ..., component_n]
+
+Example:
+["mnt", "abc", "d", "dfy"]
+
+
+6. NEUTRAL PATH SYNTAX
+---------------------
+
+A neutral path syntax MAY be used for human-facing interfaces.
+
+Syntax:
+
+/\component/\component/\component
+
+Example:
+/\mnt/\abc/\d/\dfy
+
+This syntax is optional and MUST NOT be assumed internally.
+Internal path handling uses component vectors only.
+
+
+7. ATTRIBUTES
+-------------
+
+Attributes modify semantic meaning.
+
+Attributes are boolean or scalar and MUST be explicit.
+
+Common attributes:
+
+- recursive
+- force
+- exclusive
+- shared
+- append
+
+Attributes MUST NOT encode OS-specific behavior.
+
+
+8. CONSTRAINTS
+--------------
+
+Constraints limit or qualify execution.
+
+Examples:
+- timeout
+- permission
+- atomicity
+- consistency
+
+Constraints are key-value pairs and may be persona-dependent.
+
+
+9. CONTEXT
+----------
+
+Context is metadata supplied by the execution environment.
+
+Context MAY include:
+- workspace identifier
+- persona identifier
+- current working directory
+- user identity
+- capability set
+
+Context is not user-controlled input.
+
+
+10. CANONICAL INTENT REPRESENTATION (IR)
+----------------------------------------
+
+All intents MUST be representable in canonical IR form.
+
+Example:
+
+{
+  "operation": "delete",
+  "target": {
+    "type": "path",
+    "value": ["mnt", "abc", "d", "dfy"]
+  },
+  "attributes": {
+    "recursive": true,
+    "force": true
+  },
+  "constraints": {},
+  "context": {
+    "persona": "posix",
+    "workspace": "wk2"
+  }
+}
+
+
+11. INTENT EXPANSION
+--------------------
+
+Intent expansion is the process of mapping intent IR to
+persona-specific execution logic.
+
+Expansion rules:
+- MUST be deterministic
+- MUST preserve semantic meaning
+- MUST expose semantic divergence
+- MUST NOT silently guess
+
+Example divergence:
+- POSIX allows unlink of open files
+- NT forbids unlink of open files
+
+Such divergence MUST be handled explicitly.
+
+
+12. FAILURE MODEL
+-----------------
+
+Failures MUST be classified.
+
+Failure classes include:
+- semantic (meaning cannot be preserved)
+- permission
+- resource
+- capability
+- internal
+
+Failures MUST be reported structurally, not via errno-only values.
+
+
+13. NON-GOALS
+-------------
+
+ILS does NOT define:
+- syscall numbers
+- binary formats
+- ABI contracts
+- hardware behavior
+- scheduling policy
+- memory allocation strategy
+
+
+14. VERSIONING
+--------------
+
+The intent language is versioned.
+
+Breaking semantic changes require a major version increment.
+Minor extensions require a minor version increment.
+
+
+15. OPEN QUESTIONS
+------------------
+
+- Minimal operation set completeness
+- Constraint normalization across personas
+- Formal verification of semantic preservation
+- Security implications of intent mediation
