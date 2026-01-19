@@ -1,0 +1,263 @@
+Kernel–Persona IPC Protocol (KPIP)
+=================================
+
+Status: Draft
+Version: 0.1
+Scope: Structured communication between semantic personas and the neutral kernel
+
+
+1. PURPOSE
+----------
+
+This document defines the Kernel–Persona IPC Protocol (KPIP), the sole
+mechanism by which semantic personas interact with the kernel.
+
+KPIP enforces strict separation between:
+- semantic interpretation (persona responsibility)
+- execution mechanisms (kernel responsibility)
+
+No other communication channel is permitted.
+
+
+2. DESIGN PRINCIPLES
+--------------------
+
+- Structure over convention
+- No syscall numbers
+- No implicit semantics
+- Deterministic request/response
+- Auditable message flow
+- Capability-gated access
+
+
+3. IPC MODEL OVERVIEW
+---------------------
+
+All interactions follow a request–response model.
+
+Process
+  → Persona Runtime
+      → KPIP Request
+          → Kernel
+      ← KPIP Response
+  ← Persona Runtime
+
+
+4. MESSAGE TRANSPORT
+--------------------
+
+The transport mechanism is abstract and implementation-defined.
+Possible transports include:
+- shared memory queues
+- message-passing channels
+- kernel-managed IPC endpoints
+
+Transport choice MUST NOT affect semantics.
+
+
+5. REQUEST MESSAGE STRUCTURE
+----------------------------
+
+Each request is a structured message.
+
+Conceptual structure:
+
+struct kpip_request {
+    uint32_t protocol_version;
+    uint32_t persona_id;
+    uint32_t request_id;
+
+    intent_ir intent;
+
+    execution_context context;
+    capability_set capabilities;
+}
+
+
+6. INTENT PAYLOAD
+-----------------
+
+The intent field contains a complete canonical intent IR as defined
+in the Intent Language Specification.
+
+The kernel MUST NOT:
+- reinterpret intent
+- expand intent
+- modify intent
+
+The kernel MAY:
+- validate structure
+- reject malformed intent
+- enforce capability constraints
+
+
+7. EXECUTION CONTEXT
+--------------------
+
+The execution context provides non-user-controlled metadata.
+
+Context fields include:
+- persona identifier
+- workspace identifier
+- execution context identifier
+- security domain
+
+Context is supplied by the persona runtime and validated by the kernel.
+
+
+8. CAPABILITY HANDLING
+----------------------
+
+All requests MUST include a capability set.
+
+The kernel MUST:
+- verify required capabilities
+- reject requests lacking authority
+
+No ambient authority is permitted.
+Capabilities are explicit and revocable.
+
+
+9. KERNEL PROCESSING RULES
+--------------------------
+
+Upon receiving a request, the kernel MUST:
+
+1. Validate protocol version
+2. Validate message structure
+3. Verify capabilities
+4. Route intent to appropriate kernel primitives
+5. Execute primitives
+6. Produce a structured response
+
+The kernel MUST NOT:
+- retry operations implicitly
+- alter intent meaning
+- apply persona-specific policy
+
+
+10. RESPONSE MESSAGE STRUCTURE
+------------------------------
+
+Conceptual structure:
+
+struct kpip_response {
+    uint32_t protocol_version;
+    uint32_t request_id;
+
+    status_code status;
+    error_class error;
+    char message[];
+
+    result_payload payload;
+}
+
+
+11. STATUS CODES
+----------------
+
+Status codes include:
+- SUCCESS
+- FAILURE
+- PARTIAL
+- DEFERRED
+
+
+12. ERROR CLASSES
+-----------------
+
+Error classes include:
+- SEMANTIC
+- PERMISSION
+- RESOURCE
+- CAPABILITY
+- INTERNAL
+
+
+13. RESULT PAYLOAD
+------------------
+
+The result payload is optional and operation-dependent.
+
+Examples:
+- object identifiers
+- data buffers
+- metadata structures
+
+Payload structure is opaque to the kernel beyond size and safety checks.
+
+
+14. ASYNCHRONOUS OPERATIONS
+---------------------------
+
+Long-running operations MAY be asynchronous.
+
+Asynchronous handling rules:
+- kernel returns DEFERRED status
+- persona is responsible for follow-up
+- no implicit continuation
+
+
+15. FAILURE HANDLING
+--------------------
+
+Failures MUST:
+- be explicit
+- include error classification
+- preserve intent for auditing
+
+The kernel MUST NOT translate failures into persona semantics.
+
+
+16. AUDIT AND LOGGING
+--------------------
+
+The kernel MUST log:
+- request metadata
+- intent hash
+- persona identifier
+- resolution outcome
+
+Logs MUST be sufficient for post-mortem analysis.
+
+
+17. SECURITY CONSIDERATIONS
+---------------------------
+
+- All IPC endpoints are isolated
+- No cross-persona message injection
+- Intent tampering is forbidden
+- Capability escalation is forbidden
+
+
+18. NON-GOALS
+-------------
+
+KPIP does NOT define:
+- scheduling policy
+- memory layout
+- ABI compatibility
+- syscall interfaces
+- debugging UI
+
+
+19. RATIONALE
+-------------
+
+A strict, structured IPC boundary ensures:
+- semantic correctness
+- kernel simplicity
+- persona independence
+- security auditability
+
+This protocol is the enforcement point of the
+intent-oriented architecture.
+
+
+20. OPEN QUESTIONS
+------------------
+
+- Optimal transport implementation
+- Zero-copy payload strategies
+- Debugging and tracing interfaces
+- Formal verification of IPC safety
