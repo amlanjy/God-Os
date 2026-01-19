@@ -1,4 +1,0 @@
-Kernel–Persona IPC Specification (Draft)
-========================================
-
-Status: Draft
